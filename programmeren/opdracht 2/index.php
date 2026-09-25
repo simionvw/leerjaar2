@@ -1,48 +1,65 @@
 <?php
-    class House {
-        public int $aantalVerdiepingen;
-        public int $aantalKamers;
-        public float $breedte;
-        public float $hoogte;
-        public float $diepte;
+class House {
+    private $rooms = [];
 
-        function __construct($aantalVerdiepingen, $aantalKamers, $breedte, $hoogte, $diepte) {
-            $this->aantalVerdiepingen = $aantalVerdiepingen;
-            $this->aantalKamers = $aantalKamers;
-            $this->breedte = $breedte;
-            $this->hoogte = $hoogte;
-            $this->diepte = $diepte;
-        }
-
-        function getdetails() {
-            echo "aantal verdiepingen: " . $this->aantalVerdiepingen . "<br> aantalkamers: " . $this->aantalKamers . "<br> breedte: " . $this->breedte . "<br> hoogte: " . $this->hoogte . "<br> diepte: " . $this->diepte . "<br>";
-        }
-
-        function berekenvolume() {
-            echo "volume: " . $this->breedte * $this->hoogte * $this->diepte . "<br>";
-        }
-
-        function berekenprijs() {
-            echo "prijs: " . $this->breedte * $this->hoogte * $this->diepte * 1500 . "<br>";
-        }
+    public function addRoom($room) {
+        $this->rooms[] = $room;
     }
 
-    $houseOne = new House(2,5,10,7.6,8);
-    $houseOne->getdetails();
-    $houseOne->berekenvolume();
-    $houseOne->berekenprijs();
+    public function getRooms() {
+        return $this->rooms;
+    }
 
-    echo "<br>";
+    public function getTotalVolume() {
+        $totalvolume = 0;
+        foreach ($this->rooms as $room) {
+            $totalvolume += $room->getVolume();
+        }
+        return $totalvolume;
+    }
 
-    $houseTwo = new House(3,6,11,10,6);
-    $houseTwo->getdetails();
-    $houseTwo->berekenvolume();
-    $houseTwo->berekenprijs();
+    public function getPrice() {
+        return $this->getTotalVolume() * 1500;
+    }
+}
 
-    echo "<br>";
+class Room {
+    private float $length;
+    private float $width;
+    private float $height;
 
-    $houseThree = new House(1,2,5,2.5,14);
-    $houseThree->getdetails();
-    $houseThree->berekenvolume();
-    $houseThree->berekenprijs();
-?>
+    public function __construct(float $length, float $width, float $height) {
+        $this->length = $length;
+        $this->width = $width;
+        $this->height = $height;
+    }
+
+    public function getLength() { return $this->length; }
+    public function getWidth()  { return $this->width; }
+    public function getHeight() { return $this->height; }
+
+    public function getVolume() {
+        return $this->length * $this->width * $this->height;
+    }
+}
+
+$house1 = new House();
+
+$room1 = new Room(5, 5, 5);
+$room2 = new Room(4, 4, 4);
+$room3 = new Room(2, 2, 1);
+
+$house1->addRoom($room1);
+$house1->addRoom($room2);
+$house1->addRoom($room3);
+
+echo "<h1>Inhoud kamers:</h1>";
+
+foreach($house1->getRooms() as $room) {
+    echo $room->getLength() . ", ";
+    echo $room->getWidth() . ", ";
+    echo $room->getHeight() . ", ";
+    echo $room->getVolume() . "<br>";
+}
+echo $house1->getTotalVolume() . "<br>";
+echo $house1->getPrice();
