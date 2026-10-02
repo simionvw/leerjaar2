@@ -52,6 +52,8 @@
                 array_push($errors, "Invalid password");
             } else if (strlen($this->username) < 3) {
                 array_push($errors, "Invalid username");
+            } else if (strlen($this->username) > 50) {
+                array_push($errors, "Invalid username");
             }
             
             return $errors;
