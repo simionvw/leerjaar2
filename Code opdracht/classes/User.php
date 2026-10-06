@@ -2,6 +2,8 @@
     // Functie: classdefinitie User 
     // Auteur: Simon
 
+    session_start();
+
     class User{
 
         // Eigenschappen 
@@ -9,7 +11,7 @@
         public string $email = "";
         private string $password = "";
 
-        function dbconnect() {
+        function connectdb() {
             
             define("DATABASE", "login");
             define("SERVERNAME", "localhost");
@@ -55,14 +57,22 @@
             if($this->username != ""){
 
                 // Check user exist in database
-                
-                if(true){
+                $conn = $this->connectdb();
+                $sql = "SELECT COUNT(*) users WHERE username = $this->username";
+                $query = $conn->prepare($sql);
+                $query->execute();
+                $result = $query->fetch();
+                if($result == 1){
                     array_push($errors, "Username bestaat al.");
                 } else {
                     // username opslaan in tabel login
                     // INSERT INTO `user` (`username`, `password`, `role`) VALUES ('kjhasdasdkjhsak', 'asdasdasdasdas', '');
                     // Manier 1
-                    
+                    $conn = $this->connectdb();
+                    $sql = "INSERT INTO `user` (`username`, `password`, `role`) VALUES ('kjhasdasdkjhsak', 'asdasdasdasdas', '')";
+                    $query = $conn->prepare($sql);
+                    $query->execute();
+                    $result = $query->fetch();
                     $status = true;
                 } 
             }
@@ -87,7 +97,24 @@
 
         public function loginUser(): bool {
 
-            // Connect database
+            $conn = $this->connectdb();
+            $sql = "SELECT * users WHERE username = $this->username";
+            $query = $conn->prepare($sql);
+            $query->execute();
+            $result = $query->fetch();
+
+            if ($query->rowCount() == 1) {
+                if(password_verify($this->password, $result["password"])) {
+                    
+                    $_SESSION['gebruiker'] = $this->username;
+                    return true;
+
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
 
             // Zoek user in de table user met username = $this->username
             // Doe SELECT * from user WHERE username = $this->username
@@ -96,14 +123,15 @@
             // Indien gevonden EN password klopt dan sessie vullen
 
             // Return true indien gelukt anders false
-            return true;
         }
 
         // Check if the user is already logged in
         public function isLoggedin(): bool {
-            // Check if user session has been set
-            
-            return false;
+            if (isset($_SESSION['gebruiker'])) {
+                return true;
+            } else {
+                return false;
+            }
         }
 
         public function getUser(string $username): bool {
@@ -123,8 +151,8 @@
         public function logout(){
             session_start();
             // remove all session variables
-           
-
+            session_unset();
+            session_destroy();
             // destroy the session
             
 
