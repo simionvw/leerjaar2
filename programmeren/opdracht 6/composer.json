@@ -1,7 +1,7 @@
 {
     "autoload": {
         "psr-4": {
-            "opdracht 6\\": "src/"
+            "classes\\": "src/"
         }
     }
 }
