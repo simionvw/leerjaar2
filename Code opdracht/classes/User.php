@@ -2,38 +2,32 @@
     // Functie: classdefinitie User 
     // Auteur: Simon
 
-    session_start();
-
     class User{
 
-        // Eigenschappen 
+        private const DATABASE   = "login";
+        private const SERVERNAME = "localhost";
+        private const USERNAME   = "root";
+        private const PASSWORD   = "";
+        private const TABLE      = "users";
+
         public string $username = "";
         public string $email = "";
         private string $password = "";
 
         function connectdb() {
-            
-            define("DATABASE", "login");
-            define("SERVERNAME", "localhost");
-            define("USERNAME", "root");
-            define("PASSWORD", "");
+            $conn = new PDO(
+                "mysql:host=" . self::SERVERNAME . ";dbname=" . self::DATABASE . ";charset=utf8mb4",
+                self::USERNAME,
+                self::PASSWORD
+            );
+            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+            return $conn;
+        }
 
-            define("CRUD_TABLE", "users");
-            $servername = SERVERNAME;
-            $username = USERNAME;
-            $password = PASSWORD;
-            $dbname = DATABASE;
-        
-            try {
-                $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
-                // set the PDO error mode to exception
-                $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-                //echo "Connected successfully";
-                return $conn;
-            } 
-            catch(PDOException $e) {
-                echo "Connection failed: " . $e->getMessage();
+        private function startSession(): void {
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
             }
         }
         
@@ -45,38 +39,8 @@
         }
 
         public function showUser() {
-            echo "<br>Username: $this->username<br>";
-            echo "<br>Password: $this->password<br>";
-            echo "<br>Email: $this->email<br>";
-            
-        }
-
-        public function registerUser() : array {
-            $status = false;
-            $errors=[];
-            if($this->username != ""){
-
-                // Check user exist in database
-                $conn = $this->connectdb();
-                $sql = "SELECT COUNT(*) users WHERE username = $this->username";
-                $query = $conn->prepare($sql);
-                $query->execute();
-                $result = $query->fetch();
-                if($result == 1){
-                    array_push($errors, "Username bestaat al.");
-                } else {
-                    // username opslaan in tabel login
-                    // INSERT INTO `user` (`username`, `password`, `role`) VALUES ('kjhasdasdkjhsak', 'asdasdasdasdas', '');
-                    // Manier 1
-                    $conn = $this->connectdb();
-                    $sql = "INSERT INTO `user` (`username`, `password`, `role`) VALUES ('kjhasdasdkjhsak', 'asdasdasdasdas', '')";
-                    $query = $conn->prepare($sql);
-                    $query->execute();
-                    $result = $query->fetch();
-                    $status = true;
-                } 
-            }
-            return $errors;
+            echo "<br>Username: " . htmlspecialchars($this->username) . "<br>";
+            echo "<br>Email: " . htmlspecialchars($this->email) . "<br>";
         }
 
         function validateUser(){
@@ -95,69 +59,97 @@
             return $errors;
         }
 
-        public function loginUser(): bool {
+        public function registerUser() : array {
+            $errors = $this->validateUser();
+            if (count($errors) > 0) {
+                return $errors;
+            }
 
-            $conn = $this->connectdb();
-            $sql = "SELECT * users WHERE username = $this->username";
-            $query = $conn->prepare($sql);
-            $query->execute();
-            $result = $query->fetch();
+            try {
+                $conn = $this->connectdb();
 
-            if ($query->rowCount() == 1) {
-                if(password_verify($this->password, $result["password"])) {
-                    
-                    $_SESSION['gebruiker'] = $this->username;
-                    return true;
+                // Bestaat de username al?
+                $sql = "SELECT COUNT(*) FROM `" . self::TABLE . "` WHERE username = :username";
+                $query = $conn->prepare($sql);
+                $query->execute([':username' => $this->username]);
 
-                } else {
-                    return false;
+                if ($query->fetchColumn() > 0) {
+                    $errors[] = "Username bestaat al.";
+                    return $errors;
                 }
-            } else {
+
+                $sql = "INSERT INTO `" . self::TABLE . "` (`username`, `password_hash`) 
+                        VALUES (:username, :password_hash)";
+                $query = $conn->prepare($sql);
+                $query->execute([
+                    ':username'      => $this->username,
+                    ':password_hash' => password_hash($this->password, PASSWORD_DEFAULT)
+                ]);
+
+            } catch (PDOException $e) {
+                $errors[] = "Database fout: " . $e->getMessage();
+            }
+
+            return $errors;
+        }
+
+        public function loginUser(): bool {
+            if ($this->username === "" || $this->password === "") {
                 return false;
             }
 
-            // Zoek user in de table user met username = $this->username
-            // Doe SELECT * from user WHERE username = $this->username
+            try {
+                $conn = $this->connectdb();
+                $sql = "SELECT * FROM `" . self::TABLE . "` WHERE username = :username";
+                $query = $conn->prepare($sql);
+                $query->execute([':username' => $this->username]);
+                $result = $query->fetch();
+            } catch (PDOException $e) {
+                return false;
+            }
 
+            // Gebruiker gevonden EN wachtwoord klopt?
+            if ($result && password_verify($this->password, $result["password_hash"])) {
+                $this->startSession();
+                session_regenerate_id(true); // beveiliging tegen session fixation
+                $_SESSION['gebruiker'] = $this->username;
+                return true;
+            }
 
-            // Indien gevonden EN password klopt dan sessie vullen
-
-            // Return true indien gelukt anders false
+            return false;
         }
 
         // Check if the user is already logged in
         public function isLoggedin(): bool {
-            if (isset($_SESSION['gebruiker'])) {
-                return true;
-            } else {
-                return false;
-            }
+            $this->startSession();
+            return isset($_SESSION['gebruiker']);
         }
 
         public function getUser(string $username): bool {
-            // Connect database
-
-		    // Doe SELECT * from user WHERE username = $username
-
-            if (false){
-                //Indien gevonden eigenschappen vullen met waarden uit de SELECT
-                $this->username = 'Waarde uit de database';
-                return true;
-            } else {
+            try {
+                $conn = $this->connectdb();
+                $sql = "SELECT * FROM `" . self::TABLE . "` WHERE username = :username";
+                $query = $conn->prepare($sql);
+                $query->execute([':username' => $username]);
+                $result = $query->fetch();
+            } catch (PDOException $e) {
                 return false;
-            }   
+            }
+
+            if ($result) {
+                $this->username = $result['username'];
+                return true;
+            }
+            return false;
         }
 
         public function logout(){
-            session_start();
+            $this->startSession();
             // remove all session variables
             session_unset();
-            session_destroy();
             // destroy the session
-            
-
+            session_destroy();
         }
-
 
     }
 
