@@ -2,17 +2,17 @@
     // Functie: classdefinitie User 
     // Auteur: Simon
 
-    class User{
-
-        private const DATABASE   = "login";
-        private const SERVERNAME = "localhost";
-        private const USERNAME   = "root";
-        private const PASSWORD   = "";
-        private const TABLE      = "users";
+    class Database {
+        
+        protected const DATABASE   = "login";
+        protected const SERVERNAME = "localhost";
+        protected const USERNAME   = "root";
+        protected const PASSWORD   = "";
+        protected const TABLE      = "users";
 
         public string $username = "";
         public string $email = "";
-        private string $password = "";
+        protected string $password = "";
 
         function connectdb() {
             $conn = new PDO(
@@ -24,7 +24,8 @@
             $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
             return $conn;
         }
-
+    }
+    class User extends Database{
         private function startSession(): void {
             if (session_status() === PHP_SESSION_NONE) {
                 session_start();
