@@ -5,7 +5,7 @@
     private $schooltripLists = [];
     private static $countStudent = 0;
     private static $countList = -1;
-    private static $amount = 3;
+    private static $amount = 5;
     public function __construct(
       protected string $name,
       ) {}
