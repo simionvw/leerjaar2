@@ -6,8 +6,6 @@
   use classes\Vliegtuig;
   use classes\Converter;
 
-  session_start();
-  
   $a = new Auto("bmw",2008);
   $b = new fiets("gazelle",2019);
   $c = new trein("NS",2020);
