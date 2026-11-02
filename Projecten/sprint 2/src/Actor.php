@@ -12,7 +12,7 @@
 
   public function getActors(): array {
     $pdo = Database::getConnection();
-    $stmt = $pdo->prepare("SELECT ______ FROM actors");
+    $stmt = $pdo->prepare("SELECT * FROM actors");
     $stmt->execute();
     return $stmt->fetchAll();
   }
