@@ -81,5 +81,7 @@
     </select>
     <input type="submit" name="link" value="Link film and actor">
   </form>
+
+  <a href="./">home page</a>
 </body>
 </html>
