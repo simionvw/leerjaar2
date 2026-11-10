@@ -50,6 +50,8 @@
   <?php
     if(isset($_GET['success']) && $_GET['success'] == "1") {
       echo "insert successful.";
+    } else if(isset($_GET['success']) && $_GET['success'] == "0") {
+      echo "insert unsuccessful.";
     } 
   ?>
 

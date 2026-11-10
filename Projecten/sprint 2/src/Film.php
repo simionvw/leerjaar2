@@ -7,9 +7,18 @@ class Film {
   private string $genre;
 
   public function addFilm(string $name, string $genre): void {
+
     $pdo = Database::getConnection();
-    $stmt = $pdo->prepare("INSERT INTO films (name, genre) VALUES (?, ?)");
-    $stmt->execute([$name, $genre]);
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM films WHERE name = ?");
+    $stmt->execute([$name]);
+    if ($stmt->fetchColumn() > 0) {
+      header("Location: admin.php?success=0");
+      exit;
+    } else {
+      $pdo = Database::getConnection();
+      $stmt = $pdo->prepare("INSERT INTO films (name, genre) VALUES (?, ?)");
+      $stmt->execute([$name, $genre]);
+    }
   }
 
   public function linkActor(int $filmId, int $actorId): void {
