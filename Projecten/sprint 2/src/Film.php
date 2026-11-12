@@ -11,6 +11,7 @@ class Film {
     $pdo = Database::getConnection();
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM films WHERE name = ?");
     $stmt->execute([$name]);
+
     if ($stmt->fetchColumn() > 0) {
       header("Location: admin.php?success=0");
       exit;
@@ -23,8 +24,17 @@ class Film {
 
   public function linkActor(int $filmId, int $actorId): void {
     $pdo = Database::getConnection();
-    $stmt = $pdo->prepare("INSERT INTO film_actors (film_id, actor_id) VALUES (?, ?)");
-    $stmt->execute([$filmId, $actorId]);
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM film_actors WHERE film_id = ? AND actor_id = ?");
+    $stmt->execute([$filmId,$actorId]);
+
+    if ($stmt->fetchColumn() > 0) {
+      header("Location: admin.php?success=0");
+      exit;
+    } else {
+      $pdo = Database::getConnection();
+      $stmt = $pdo->prepare("INSERT INTO film_actors (film_id, actor_id) VALUES (?, ?)");
+      $stmt->execute([$filmId, $actorId]);
+    }
   }
 
   public function getActorsByFilm(int $filmId): array {
